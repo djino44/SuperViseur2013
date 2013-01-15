@@ -55,6 +55,7 @@ class commInter(QObject, threading.Thread):
             self.readyRead.emit(self.devType, self.devNum, self.devStatus)
             print self.devType, self.devNum, self.devStatus
             time.sleep(0.1)
+            #self._stopevent.wait(0.1)
         print('Thread exit')
               
     		

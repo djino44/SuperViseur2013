@@ -38,12 +38,15 @@ class MyMainWindow(QtGui.QMainWindow):
     def updateD(self,devType,devNum,devStatus):
         global tabAna, tabTor
         print(devType+devNum+devStatus)
+        
         if devType=="A":
             numberA= int(devNum)
             val=devStatus
+            labName=tabAna[numberA].objectName()
+            tabAna[numberA].setText(labName+" :"+val)
         
         if devType=="T":
-            print "ca marche"
+            print "TOR"
             numberT= int(devNum)
             valT=devStatus
             
@@ -55,7 +58,8 @@ class MyMainWindow(QtGui.QMainWindow):
                 print('valT=0')
                 print numberT
                 tabTor[numberT].setChecked(False)
-                           
+        
+                               
     def buttonClicked(self, button):
         global tabBtn
         
@@ -151,7 +155,7 @@ class MyMainWindow(QtGui.QMainWindow):
         keys = settings.childKeys()
         for e in keys:
             button = QtGui.QLabel()
-            tabAna[e]= button
+            tabAna[int(e)]= button
             self.ui.gridLayout_2.addWidget(button,i,j)
             button.setVisible(True)
                       
@@ -291,7 +295,8 @@ class MyMainWindow(QtGui.QMainWindow):
     def closeEvent(self, e):
        
         e.accept()      
-        self.udp.stop()
+        #self.udp.stop()
+        self.udp._Thread__stop()
       
       
       
