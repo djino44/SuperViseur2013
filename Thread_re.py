@@ -1,11 +1,10 @@
 from PySide import QtGui, QtCore
 from PySide.QtCore import *
 import threading
-import time
+import time, re
 import string
 import connection
 import re
-
 
 
 
@@ -32,7 +31,7 @@ class commInter(QObject, threading.Thread):
         s = s.decode('utf-8')
         print(s)
         
-        m = re.search(r'\%(?P<type>\w)(?P<id>\d+)=(?P<value>.+?)\%', s)
+        m = re.search(r'\%(?P<type>\w)(?P<id>\d+)=(?P<value>\-?\d+)\%', s)
         # Get values
         if m:
             gd = m.groupdict()
@@ -40,6 +39,7 @@ class commInter(QObject, threading.Thread):
             self.devNum = gd['id']
             self.devStatus = gd['value']
         
+        print('>>', self.devType, self.devNum, self.devStatus)
         
 	
     def stop(self):
@@ -61,7 +61,7 @@ class commInter(QObject, threading.Thread):
             message = self.conn.getMessage()
             self.readString(message)
             self.readyRead.emit(self.devType, self.devNum, self.devStatus)
-            print self.devType, self.devNum, self.devStatus
+            print(self.devType, self.devNum, self.devStatus)
             time.sleep(0.1)
             #self._stopevent.wait(0.1)
         print('Thread exit')

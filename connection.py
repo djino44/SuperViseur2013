@@ -25,7 +25,7 @@ class connection:
 
 	def sendMessageSock(self, s):
 		self.clientSock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-		self.clientSock.connect(("localhost", 50007))
+		self.clientSock.connect(("169.254.55.179", 50007))
 		self.clientSock.send(s)
 		self.clientSock.close()
 

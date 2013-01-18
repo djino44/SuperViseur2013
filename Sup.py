@@ -9,9 +9,15 @@ i=0
 j=0
 
 tabSlider={}
+tabSlider2={}
+tabSlider3={}
 tabDial={}
+tabDial2={}
+tabDial3={}
 tabAna={}
 tabTor={}
+tabV={}
+tabBoards={}
 
 class MyMainWindow(QtGui.QMainWindow):
     
@@ -24,7 +30,8 @@ class MyMainWindow(QtGui.QMainWindow):
         super(MyMainWindow, self).__init__(parent)
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
-        self.ui.pushButton.clicked.connect(self.ChargeConf)
+        self.ui.pushButton.clicked.connect(self.sendAlpha)
+        self.ui.pushButton_2.clicked.connect(self.sendMessToBoard)
         self.udp = commInter(1)
         self.udp.readyRead.connect(self.updateD)
         self.udp.start()
@@ -34,7 +41,25 @@ class MyMainWindow(QtGui.QMainWindow):
         self.signalMapper.mapped[QObject].connect(self.buttonClicked)
         self.settings = QSettings("toto.ini",QSettings.IniFormat)
         self.clicked.connect(self.click)
+    
+    def sendAlpha(self):
         
+        message = self.ui.lineEdit.text()
+        print message
+        self.ui.lineEdit.clear()
+        self.udp.sendMessage("M","1",message)
+        message = ""
+    
+    def sendMessToBoard(self):
+        
+        message = self.ui.lineEdit_2.text()
+        self.ui.lineEdit_2.clear()
+        for n in tabBoards:
+            if ((tabBoards[n].isChecked)==True):
+                self.udp.sendMessage("B",str(n),message)
+        
+        self.udp.sendMessage("B","1",message) 
+               
     def updateD(self,devType,devNum,devStatus):
         global tabAna, tabTor
         print(devType+devNum+devStatus)
@@ -45,7 +70,7 @@ class MyMainWindow(QtGui.QMainWindow):
             labName=tabAna[numberA].objectName()
             tabAna[numberA].setText(labName+" :"+val)
         
-        if devType=="T":
+        elif devType=="T":
             print "TOR"
             numberT= int(devNum)
             valT=devStatus
@@ -59,25 +84,48 @@ class MyMainWindow(QtGui.QMainWindow):
                 print numberT
                 tabTor[numberT].setChecked(False)
         
+        elif devType=="B":
+            print "Boards"
+            numberT= int(devNum)
+            valT=devStatus
+            boardName=tabBoards[numberT].objectName()
+            self.ui.textBrowser.setText(boardName+" :"+valT+"\n")
+            
+        elif devType=="S":
+            print "Slider"
+            numberT= int(devNum)
+            valT=int(devStatus)
+            tabSlider3.value(valT)
+        
                                
     def buttonClicked(self, button):
         global tabBtn
         
         if isinstance(button,QtGui.QCheckBox):
-            print(button.isChecked())
+            butNumber=tabV[button]
+            logicState=button.isChecked()
+            if logicState == True:
+                state="1"
+            else:
+                state="0"
+            print(state)
+            self.udp.sendMessage("V",butNumber,state)
             
         elif isinstance(button,QtGui.QDial):    
-            print( button.value())
+            print(button.value())
             label=tabDial[button]
             labName=label.objectName()
             label.setText(labName+" :"+str(button.value()))
+            butNumber=tabDial2[button]
+            self.udp.sendMessage("D",butNumber,str(button.value()))
                 
         elif isinstance(button,QtGui.QSlider):
             print( button.value())
             label=tabSlider[button]
+            butNumber=tabSlider2[button]
             labName=label.objectName()
             label.setText(labName+" :"+str(button.value()))            
-            
+            self.udp.sendMessage("S",butNumber,str(button.value()))
        
                 
     @QtCore.Slot(object)
@@ -100,7 +148,7 @@ class MyMainWindow(QtGui.QMainWindow):
     def ChargeConf(self):
         global i
         global j
-        global tabBtn,tabDial,tabAna,tabTor
+        global tabBtn,tabDial,tabDial2,tabDial3,tabAna,tabTor,tabV
         
         
         settings=self.settings
@@ -119,6 +167,7 @@ class MyMainWindow(QtGui.QMainWindow):
              button.setText(settings.value(x))
              #button.stateChanged.connect(self.click)
              button.setObjectName(settings.value(x))
+             tabV[button]=x
              button.stateChanged.connect(self.signalMapper.map)
              self.signalMapper.setMapping(button, button) 
         settings.endGroup()
@@ -131,6 +180,7 @@ class MyMainWindow(QtGui.QMainWindow):
         for z in keys:
             button = QtGui.QRadioButton()
             button.setAutoExclusive(False)
+            button.setEnabled(False);
             print z
             tabTor[int(z)]=button
             self.ui.gridLayout_3.addWidget(button,i,j)
@@ -195,6 +245,8 @@ class MyMainWindow(QtGui.QMainWindow):
             
             
             tabDial[button]=label
+            tabDial2[button]=r
+            tabDial3[r]=button
             button.valueChanged.connect(self.signalMapper.map)
             self.signalMapper.setMapping(button, button)
             
@@ -228,7 +280,9 @@ class MyMainWindow(QtGui.QMainWindow):
              
            
             tabSlider[button]=label
-            button.valueChanged.connect(self.signalMapper.map)
+            tabSlider2[button]=t
+            tabSlider3[t]=button
+            button.sliderReleased.connect(self.signalMapper.map)
             self.signalMapper.setMapping(button, button)
             
         settings.endGroup()
@@ -247,8 +301,8 @@ class MyMainWindow(QtGui.QMainWindow):
                 j=0
                 i=i+1
             button.setText(settings.value(y))
-            button.setObjectName(settings.value(y)) 
-            #button.pressed.connect(self.click) 
+            button.setObjectName(settings.value(y))
+            tabBoards[y]=button  
             button.pressed.connect(self.signalMapper.map)
             self.signalMapper.setMapping(button, button)   
         
